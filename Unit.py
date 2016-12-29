@@ -43,6 +43,7 @@ class MySprite(pygame.sprite.Sprite):
                 rect = pygame.Rect(frame_x, frame_y, self.frame_width, self.frame_height)
                 self.image =  pygame.transform.flip(self.master_image.subsurface(rect), self.direction,False)
         except:
+            print(self.frame)
             print(self.Type)
 class Bullet(MySprite):
     def __init__(self,Side,ShootPostion,weapon,TargetPostion,ShootPostion_adj=None):
@@ -65,6 +66,7 @@ class Bullet(MySprite):
         self.old_pos = [ShootPostion[0],ShootPostion[1]]
         self.Type = "Bullet"
         self.Side = Side
+        
     def update(self):
         self.postion[0] -= self.speed[0]
         self.postion[1] -= self.speed[1]
@@ -99,15 +101,15 @@ class Grenade(MySprite):
             self.postion[1] -= self.speed[1]
             self.rect.center = self.postion
     def Fire(self,bullet):
-        ScrapNum = 20
+        ScrapNum = 25
         pygame.mixer.Sound(Config.PATH +'/musices/Grenade.wav').play()
         for i in range(0,ScrapNum,1):
-            bullet.add(Bullet(self.Side,[self.rect.x,self.rect.y],Config.Grenade(),(self.rect.x+random.randrange(-100,100),self.rect.y-random.randrange(0,5))))
+            bullet.add(Bullet(self.Side,[self.rect.x,self.rect.y],Config.Grenade(),[self.rect.x-math.cos(25*i),self.rect.y+math.sin(25*i)]))
 class Shield(MySprite):
     def __init__(self):
         MySprite.__init__(self) #extend the base Sprite class
-        self.image = pygame.Surface((5, 30))
-        pygame.draw.rect(self.image, Config.BLUE, (0, 0, 5, 30))
+        self.image = pygame.Surface((4, 30))
+        pygame.draw.rect(self.image, Config.BLUE, (0, 0, 4, 30))
         self.rect = self.image.get_rect()
     def update(self):
         pass
@@ -164,9 +166,14 @@ class Unit(object):
         self.Foot.load(self.FootFrame, 17, 12, 4)
         self.Foot.direction = self.direction
         self.Body = MySprite()
-        self.Body.load(self.FireFrame, 30, 20, 4)
+        self.Body.load(self.FireFrame, 10, 20, 1)
         self.Body.Type = "Fire"
         self.Body.first_frame = self.weapon.ID * self.Body.columns
+        self.Body.direction = self.direction
+        self.Hand = MySprite()
+        self.Hand.load(self.HandFrame, 27, 8, 3)
+        self.Hand.first_frame = self.weapon.ID * self.Hand.columns
+        self.Hand.frame = self.Hand.first_frame
         self.Body.direction = self.direction
         self.DefenseBody = MySprite()
         self.DefenseBody.load(self.DefenseFrame, 40, 35, 6)
@@ -212,9 +219,9 @@ class Unit(object):
     def FireBreak(self):
         self.FireBreaked = True
     def fireUpdate(self):        
-        self.Body.frame += 1
-        if self.Body.frame == self.Body.first_frame+self.weapon.FireAction:
-            self.Body.frame = self.Body.first_frame
+        self.Hand.frame += 1
+        if self.Hand.frame == self.Hand.first_frame+self.weapon.FireAction:
+            self.Hand.frame = self.Hand.first_frame
             self.fire_actioned = True
     def Reload(self):
         if self.reload_actioned and self.fire_actioned and not self.defense_actioning and not self.Throwing and self.hp > 0:
@@ -241,11 +248,10 @@ class Unit(object):
             pygame.mixer.Sound(Config.PATH + self.weapon.ReloadSound).play()
             self.magazine = self.weapon.Magazine #彈匣量
             self.reload_actioned = True
-            self.Body.load(self.FireFrame, 30, 20, 4)
+            self.Body.load(self.FireFrame, 10, 20, 1)
             self.Body.Type = "Fire"
-            self.Body.first_frame = self.weapon.ID * self.Body.columns
-            self.Body.last_frame = self.Body.first_frame + self.Body.columns - 1
-            self.Body.frame = self.Body.first_frame
+            self.Body.first_frame = 0
+            self.Body.frame = 0
     def defenseUpdaet(self):
         if self.defense_actioning and self.hp > 0:#維持
             self.defense_hold = True
@@ -273,14 +279,14 @@ class Unit(object):
         self.Body.frame += 1
         if self.Body.frame > self.Body.last_frame:
             self.Throwing = False
-            self.Body.load(self.FireFrame, 30, 20, 4)
+            self.Body.load(self.FireFrame, 10, 20, 1)
             self.Body.Type = "Fire"
-            self.Body.first_frame = self.weapon.ID * self.Body.columns
-            self.Body.last_frame = self.Body.first_frame + self.Body.columns - 1
+            self.Body.first_frame = 0
             self.Body.frame = self.Body.first_frame
     def update(self,camera,entities,bullet):
         self.Foot.direction = self.direction
         self.Body.direction = self.direction
+        self.Hand.direction = self.direction
         self.DefenseBody.direction = self.direction
         self.collisionBlock(entities)
         self.collisionBullet(bullet)
@@ -306,10 +312,10 @@ class Unit(object):
                     self.DefenseBody.frame = self.DefenseBody.last_frame
                 if self.direction:
                     self.DefenseBody.X = self.rect.x - 14
-                    self.Shield.X = self.rect.x - 7
+                    self.Shield.X = self.rect.x - 5
                 else:
                     self.DefenseBody.X = self.rect.x - 10
-                    self.Shield.X = self.rect.x + 20
+                    self.Shield.X = self.rect.x + 18
                 self.DefenseBody.Y = self.rect.y - 23
                 self.Shield.Y = self.rect.y - 19
                 self.defenseUpdaet()
@@ -332,9 +338,12 @@ class Unit(object):
                         self.Body.X = self.rect.x - 5
                 else:
                     if self.direction:
-                        self.Body.X = self.rect.x - 16
+                        self.Body.X = self.rect.x + 3
+                        self.Hand.X = self.rect.x - 15
                     else:
                         self.Body.X = self.rect.x
+                        self.Hand.X = self.rect.x + 1
+            self.Hand.Y = self.rect.y - 11
             self.Body.Y = self.rect.y - 20
         else:
             self.Foot.load(self.DieFrame,40,35,7)
@@ -348,8 +357,11 @@ class Unit(object):
             if not self.defense_actioning and not self.defense_hold:
                 self.Foot.update()
                 self.Body.update()
+                self.Hand.update()
                 screen.blit(self.Foot.image, camera.apply(self.Foot))
                 screen.blit(self.Body.image, camera.apply(self.Body))
+                if self.Body.Type == "Fire":
+                    screen.blit(self.Hand.image, camera.apply(self.Hand))
             else:
                 self.DefenseBody.update()
                 screen.blit(self.DefenseBody.image, camera.apply(self.DefenseBody))
@@ -385,6 +397,7 @@ class Unit(object):
                 attacker = None
                 attacker = pygame.sprite.spritecollideany(self.Shield, target)
                 if attacker != None:
+                    print(attacker.rect,self.Shield.rect)
                     #self.hp -= attacker.damage
                     pygame.mixer.Sound(Config.PATH+'/musices/defense.wav').play()
                     target.remove(attacker)
@@ -393,6 +406,7 @@ class Unit(object):
             attacker = pygame.sprite.spritecollideany(self.Foot, target)
             if attacker != None:
                 if attacker.Side != self.Side and attacker.Type == "Bullet":
+                    print(attacker.rect,self.Foot.rect,self.Shield.rect)
                     self.hp -= attacker.damage
                     pygame.mixer.Sound(Config.PATH+'/musices/Hit.wav').play()
                     target.remove(attacker)
@@ -401,6 +415,7 @@ class Unit(object):
             attacker = pygame.sprite.spritecollideany(self.Body, target)
             if attacker != None:
                 if attacker.Side != self.Side and attacker.Type == "Bullet":
+                    print(attacker.rect,self.Body.rect,self.Shield.rect)
                     self.hp -= attacker.damage
                     pygame.mixer.Sound(Config.PATH+'/musices/Hit.wav').play()
                     target.remove(attacker)
@@ -413,11 +428,12 @@ class Enemy(Unit):
         self.lastAction=0
         self.actionRate=30#ai動作間隔
         #圖形
-        self.FireFrame = Config.PATH+"/images/Fire_e.png"
+        self.FireFrame = Config.PATH+"/images/Body_e.png"
         self.FootFrame = Config.PATH+"/images/Foot_e.png"
         self.ReloadFrame = Config.PATH+"/images/Reload_e.png"
         self.ThrowFrame = Config.PATH+"/images/Throw_e.png"
         self.DieFrame = Config.PATH+"/images/Die_e.png"
+        self.HandFrame = Config.PATH+"/images/Hand_e.png"
         self.DefenseFrame = Config.PATH+"/images/Defense_e.png"
         #初始化
         Unit.__init__(self,x,y,weapon)
@@ -442,11 +458,12 @@ class Player(Unit):
         #勢力參數
         self.Side = 0
         #圖形
-        self.FireFrame = Config.PATH+"/images/Fire.png"
+        self.FireFrame = Config.PATH+"/images/Body.png"
         self.FootFrame = Config.PATH+"/images/Foot.png"
         self.ReloadFrame = Config.PATH+"/images/Reload.png"
         self.ThrowFrame = Config.PATH+"/images/Throw.png"
         self.DieFrame = Config.PATH+"/images/Die.png"
+        self.HandFrame = Config.PATH+"/images/Hand.png"
         self.DefenseFrame = Config.PATH+"/images/Defense.png"
         #初始化
         Unit.__init__(self,x,y,weapon)

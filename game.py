@@ -130,7 +130,7 @@ def gameStart(arg):
     PAUSE = False
     pygame.mixer.music.load(arg["BGM"])
     pygame.mixer.music.play(-1,0.0)
-    PLAYER = Player(0,arg["BlockFloat"]-12,Config.Pistol())
+    PLAYER = Player(0,arg["BlockFloat"]-12,Config.SMG())
     BlackGroundImage = pygame.image.load(arg["BackGroundImage"])
     BG_rect = BlackGroundImage.get_rect()
     entities = pygame.sprite.Group()
@@ -190,14 +190,14 @@ def gameStart(arg):
         else:
             PLAYER.defense_actioning = False
         #新增敵人
-        '''
-        if (random.randint(0,100)<3 and len(ENEMYS)<15):
+        #'''
+        if (random.randint(0,100)<2 and len(ENEMYS)<15):
             pos=random.choice([-600,800])
-            enemy = Enemy(PLAYER.rect.x+pos,Config.BlockFloat-12,Pistol())
+            enemy = Enemy(PLAYER.rect.x+pos,Config.BlockFloat-12,Config.Pistol())
             ENEMYS.append(enemy)
         #AI
         AI(ENEMYS,PLAYER,BULLETS)
-        '''
+        #'''
         camera.update(PLAYER)
         for e in entities:
             e.update(BULLETS)

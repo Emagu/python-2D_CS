@@ -49,5 +49,5 @@ class SMG(object):
 class Grenade(object):
         ID = 100
         Damage = 30
-        BulletSpeed = 10
+        BulletSpeed = 4
         LimitRange = 200
