@@ -80,7 +80,7 @@ class Grenade(MySprite):
         x_distance = postion_adj[0]-move[0]
         y_distance = postion_adj[1]-move[1]
         distance = math.sqrt(math.pow(x_distance,2) + math.pow(y_distance,2))
-        self.speed = [x_distance/distance*10,y_distance/distance*10]
+        self.speed = [x_distance/distance*Config.Grenade.ThrowSpeed,y_distance/distance*Config.Grenade.ThrowSpeed]
         self.image = pygame.image.load("images/Grenade.png")
         self.rect = self.image.get_rect()
         self.postion = postion

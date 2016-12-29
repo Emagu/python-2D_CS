@@ -11,5 +11,6 @@
 	"WinType": 0,
 	"WinParameter": 20,
 	"BGM": "musices/bgm.mp3",
-	"Lock": "False"
+	"Lock": "False",
+	"Weapon": 0
 }

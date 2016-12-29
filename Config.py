@@ -18,6 +18,7 @@ AimCursorImage = PATH+'/images/cursor_aim.png'
 Font = PATH+'/fonts/DFT_B3.ttc'
 GameBGM = PATH+'/musices/bgm.mp3'
 VERSION = "Ver 3.0"
+
 class Pistol(object):
         ID = 0
         ShootRate = 200
@@ -34,7 +35,7 @@ class Pistol(object):
         AutoFire = False
 class SMG(object):
         ID = 1
-        ShootRate = 200
+        ShootRate = 100
         MoveSpeed = 5
         Damage = 10
         BulletSpeed = 10
@@ -46,8 +47,24 @@ class SMG(object):
         Magazine = 30
         Ammo = '/images/ammo/9MM.png'
         AutoFire = True
+class Shotgun(object):
+        ID = 0
+        ShootRate = 500
+        MoveSpeed = 5
+        Damage = 10
+        BulletSpeed = 10
+        LimitRange = 300
+        FireSound = '/musices/Gun1.wav'
+        ReloadSound = '/musices/Reload.wav'
+        FireAction = 3
+        ReloadAction = 5
+        Magazine = 5
+        Ammo = '/images/ammo/9MM.png'
+        AutoFire = False
 class Grenade(object):
         ID = 100
         Damage = 30
-        BulletSpeed = 4
+        BulletSpeed = 15
+        ThrowSpeed = 8
         LimitRange = 200
+WEAPON=[Pistol(),SMG(),Shotgun()]

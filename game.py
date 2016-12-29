@@ -125,12 +125,12 @@ def gameMenu():
         fpsClock.tick(Config.FPS)
 def gameStart(arg):
     BlockArray = []
-    SOURCE = 0
+    SOURCE,TIME,DISTANCE = 0,pygame.time.get_ticks()//1000,0
     ENEMYS = []
     PAUSE = False
     pygame.mixer.music.load(arg["BGM"])
     pygame.mixer.music.play(-1,0.0)
-    PLAYER = Player(0,arg["BlockFloat"]-12,Config.SMG())
+    PLAYER = Player(0,arg["BlockFloat"]-12,Config.WEAPON[int(arg["Weapon"])])
     BlackGroundImage = pygame.image.load(arg["BackGroundImage"])
     BG_rect = BlackGroundImage.get_rect()
     entities = pygame.sprite.Group()
@@ -216,11 +216,21 @@ def gameStart(arg):
         for i in range(0,PLAYER.magazine,1):
             DISPLAYSURF.blit(pygame.image.load(Config.PATH+PLAYER.weapon.Ammo), (200 + 9*i, 550))
 	#分數描繪
+        PAST=pygame.time.get_ticks()//1000-TIME#經過時間
+        if(PLAYER.rect.x//32>DISTANCE):DISTANCE=PLAYER.rect.x//32	
         SourceText = pygame.font.Font(Config.Font,30)
-        TextSurf, TextRect = text_objects("擊殺人數:"+str(SOURCE), SourceText,Config.WHITE)
-        TextRect.x = 0
-        TextRect.y = 550
-        DISPLAYSURF.blit(TextSurf, TextRect)
+        SourceSurf, SourceRect = text_objects("擊殺人數:"+str(SOURCE), SourceText,Config.WHITE)
+        SourceRect.topleft = (0,550)
+        TIMEText = pygame.font.Font(Config.Font,20)
+        TIMESurf, TIMERect = text_objects("時間:"+str(PAST//60)+":"+str(PAST%60), TIMEText,Config.WHITE)
+        TIMERect.topleft = (700,550)
+        DISTANCEText = pygame.font.Font(Config.Font,20)
+        DISTANCESurf, DISTANCERect = text_objects("距離"+str(DISTANCE)+'M', DISTANCEText,Config.WHITE)
+        DISTANCERect.topleft = (700,570)
+
+        DISPLAYSURF.blit(SourceSurf, SourceRect)
+        DISPLAYSURF.blit(TIMESurf, TIMERect)
+        DISPLAYSURF.blit(DISTANCESurf, DISTANCERect)
         DISPLAYSURF.blit(AimCursor, AimCursor_rect)
         pygame.display.update()
         fpsClock.tick(Config.FPS)
