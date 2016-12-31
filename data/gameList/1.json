@@ -1,4 +1,5 @@
 {
+	"Level": 1,
 	"Title": "test",
 	"IconImage": "images/Game0.png",
 	"BackGroundImage": "images/BACK.png",
@@ -6,11 +7,13 @@
 	"BlockImageWidth": 32,
 	"BlockImageHeight": 14,
 	"BlockFloat": 500,
-	"BlockNumber": 500,
+	"BlockNumber": 300,
 	"Description": "擊殺20名敵人，完成任務。",
-	"WinType": 0,
-	"WinParameter": 20,
+	"KillToWin": 0,
+	"DistanceToWin": 100,
+	"HoldToWin": 120,
 	"BGM": "musices/bgm.mp3",
 	"Lock": "False",
+	"EnemyWeapon": 0,
 	"Weapon": 0
 }
