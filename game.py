@@ -121,15 +121,17 @@ class gameStart(Scene_Base):
 			for j in range(0,last_block,1):    
 				p = Platform(i*block_w, 500 - j*block_h,arg["BlockImage"])
 				self.entities.add(p)
-		self.camera = Camera(BG_rect[2],BG_rect[3], block_num*block_w, BG_rect[3])
+		self.sceneWidth =  block_num*block_w
+		self.camera = Camera(BG_rect[2],BG_rect[3], self.sceneWidth, BG_rect[3])
 	def update(self):
 		#勝負判定
 		if self.SOURCE >= self.arg["KillToWin"] and self.arg["KillToWin"] != 0:#擊殺獲勝       
-			print("擊殺獲勝")
+			self.classComplete()
 		elif self.DISTANCE >= self.arg["DistanceToWin"] and self.arg["DistanceToWin"] != 0:#距離獲勝                
-			print("距離獲勝")
-		elif self.TIME >= self.arg["HoldToWin"] and self.arg["HoldToWin"] != 0:#堅持獲勝                
-			print("堅持獲勝")
+			self.classComplete()
+		elif pygame.time.get_ticks() // 1000 - self.TIME >= self.arg["HoldToWin"] and self.arg["HoldToWin"] != 0:#堅持獲勝                
+			print(self.TIME)
+			self.classComplete()
 		elif self.PLAYER.hp <= 0:
 			self.classEnd()
 		else:
@@ -160,7 +162,8 @@ class gameStart(Scene_Base):
 				if(self.PLAYER.rect.x+self.camera.rect.x>=10):#左側lock
 					self.PLAYER.MoveLeft()
 			if pressed[pygame.K_d]:
-				self.PLAYER.MoveRight()
+				if self.PLAYER.rect.x < self.sceneWidth - 20:
+					self.PLAYER.MoveRight()
 			if pressed[pygame.K_r]:
 				self.PLAYER.Reload()
 			if pressed[pygame.K_SPACE]:
@@ -266,13 +269,35 @@ class gameStart(Scene_Base):
 						bot.action = 0
 	def classEnd(self):
 		self.display = False
-		arg = {}
-		arg["Level"] = self.arg["Title"]
-		arg["Source"] = str(self.SOURCE)
+		self.arg["Source"] = str(self.SOURCE)
+		if self.SOURCE > self.arg["HightSource"]:
+			self.arg["HightSource"] = self.SOURCE
 		past = pygame.time.get_ticks() // 1000 - self.TIME
-		arg["Time"] = str(past // 60) + ":" + str(past % 60) 
-		arg["Distance"] = str(self.DISTANCE)
-		self.nextScene = classEnd(self.Screen,arg)
+		self.arg["Time"] = str(past // 60) + ":" + str(past % 60) 
+		if past > self.arg["HightTimeValue"]:
+			self.arg["HightTimeValue"] = past
+			self.arg["HightTime"] = self.arg["Time"]
+		self.arg["Distance"] = str(self.DISTANCE)
+		if self.DISTANCE > self.arg["HightDistance"]:
+			self.arg["HightDistance"] = self.DISTANCE
+		self.nextScene = classEnd(self.Screen,self.arg)
+	def classComplete(self):
+		self.display = False
+		self.arg["Source"] = str(self.SOURCE)
+		if self.SOURCE > self.arg["HightSource"]:
+			self.arg["HightSource"] = self.SOURCE
+		past = pygame.time.get_ticks() // 1000 - self.TIME
+		self.arg["Time"] = str(past // 60) + ":" + str(past % 60) 
+		if past > self.arg["HightTimeValue"]:
+			self.arg["HightTimeValue"] = past
+			self.arg["HightTime"] = self.arg["Time"]
+		self.arg["Distance"] = str(self.DISTANCE)
+		if self.DISTANCE > self.arg["HightDistance"]:
+			self.arg["HightDistance"] = self.DISTANCE
+		if self.arg["Level"] == 3:
+			self.nextScene = gameEnd(self.Screen,self.arg)
+		else:
+			self.nextScene = classComplete(self.Screen,self.arg)
 class classEnd(Scene_Base):
 	def __init__(self,Screen,arg):
 		Scene_Base.__init__(self,Screen)
@@ -294,6 +319,7 @@ class classEnd(Scene_Base):
 		self.TimeStringCount = 0#時間
 		self.DistanceStringCount = 0#距離
 		self.InfoStringCount = 0#說明
+		self.messageComplete = False
 		#倒數回到選單
 		self.ReCountToMenu = 10
 		self.ReCountStartTime = pygame.time.get_ticks()
@@ -304,15 +330,10 @@ class classEnd(Scene_Base):
 		for event in pygame.event.get():
 			if event.type == 12:
 				self.quitgame()
-			else:
-				self.gameMenu()
-		#準心更新
-		mouse = pygame.mouse.get_pos()
-		AimCursor = pygame.image.load(Config.NormalCursorImage)
-		AimCursor_rect = AimCursor.get_rect()
-		AimCursor_rect.center = mouse
+		if (True in pygame.mouse.get_pressed()) or (True in pygame.key.get_pressed())and self.messageComplete:
+			self.gameMenu()
 		#文字處理
-		LevelString = "任務:"+ self.arg["Level"]
+		LevelString = "任務:"+ self.arg["Title"]
 		LevelText = pygame.font.Font(Config.Font,30)
 		LevelSurf, LevelRect = text_objects(LevelString[0:self.LevelStringCount], LevelText,Config.YELLOW)
 		LevelRect.topleft = (0,300)
@@ -327,7 +348,7 @@ class classEnd(Scene_Base):
 		TimeSurf, TimeRect = text_objects(TimeString[0:self.TimeStringCount], TimeText,Config.YELLOW)
 		TimeRect.topleft = (0,390)
 		
-		DistanceString = "移動距離:"+ self.arg["Distance"] + "MemoryError"
+		DistanceString = "移動距離:"+ self.arg["Distance"] + "M"
 		DistanceText = pygame.font.Font(Config.Font,25)
 		DistanceSurf, DistanceRect = text_objects(DistanceString[0:self.DistanceStringCount], DistanceText,Config.YELLOW)
 		DistanceRect.topleft = (0,430)
@@ -352,37 +373,139 @@ class classEnd(Scene_Base):
 				self.DistanceStringCount += 1
 			elif len(InfoString) > self.InfoStringCount: 
 				self.InfoStringCount += 1
+			elif not self.messageComplete:
+				self.messageComplete = True
+				self.ReCountStartTime = pygame.time.get_ticks()
 		else:
 			self.FPS_Click += 1
 		#貼圖
-		self.Screen.blit(AimCursor, AimCursor_rect)
 		self.Screen.blit(LevelSurf, LevelRect)
 		self.Screen.blit(SourceSurf, SourceRect)
 		self.Screen.blit(TimeSurf, TimeRect)
 		self.Screen.blit(DistanceSurf, DistanceRect)
 		self.Screen.blit(InfoSurf, InfoRect)
-		self.Screen.blit(ReCounterSurf, ReCounterRect)
-		if pygame.time.get_ticks() - self.ReCountStartTime >= 1000:
-			self.ReCountStartTime = pygame.time.get_ticks()
-			self.ReCountToMenu -= 1
-			if self.ReCountToMenu < 0:
-				self.gameMenu()
+		if self.messageComplete:
+			self.Screen.blit(ReCounterSurf, ReCounterRect)
+			if (pygame.time.get_ticks() - self.ReCountStartTime >= 1000):
+				self.ReCountStartTime = pygame.time.get_ticks()
+				self.ReCountToMenu -= 1
+				if self.ReCountToMenu < 0:
+					self.gameMenu()
+		pygame.display.update()
+	def gameMenu(self):
+		self.display = False
+		self.nextScene = gameMenu(self.Screen)
+class classComplete(Scene_Base):
+	def __init__(self,Screen,arg):
+		Scene_Base.__init__(self,Screen)
+		self.arg = arg
+		self.EndScreen = self.Screen.copy()
+		self.FPS_Delayer = 3 #減慢幾倍FPS
+		self.FPS_Click = 0 #減慢用計數器
+		#輸出字串輸出幾個文字
+		self.LevelStringCount = 1#關卡
+		self.SourceStringCount = 0#得分
+		self.TimeStringCount = 0#時間
+		self.DistanceStringCount = 0#距離
+		self.InfoStringCount = 0#說明
+		self.messageComplete = False
+		#倒數回到選單
+		self.ReCountToMenu = 10
+		self.ReCountStartTime = pygame.time.get_ticks()
+		#覆寫檔案
+		with open('data/gameList/'+str(self.arg["Level"])+".json", 'w') as f:
+			json.dump(self.arg, f, ensure_ascii=False)
+		
+		with open('data/gameList/'+str(self.arg["Level"]+1)+'.json') as json_data:
+			nextLevel = json.load(json_data)
+			nextLevel["Lock"] = "False"
+			with open('data/gameList/'+str(self.arg["Level"]+1)+".json", 'w') as f:
+				json.dump(nextLevel, f, ensure_ascii=False)
+	def update(self):
+		self.Screen.fill(Config.WHITE)
+		self.Screen.blit(self.EndScreen, (0, 0))
+		#偵測是否關閉
+		for event in pygame.event.get():
+			if event.type == 12:
+				self.quitgame()
+		if (True in pygame.mouse.get_pressed()) or (True in pygame.key.get_pressed())and self.messageComplete:
+			self.gameMenu()
+		#文字處理
+		LevelString = "任務:"+ self.arg["Title"]
+		LevelText = pygame.font.Font(Config.Font,30)
+		LevelSurf, LevelRect = text_objects(LevelString[0:self.LevelStringCount], LevelText,Config.YELLOW)
+		LevelRect.topleft = (0,300)
+		
+		SourceString = "擊殺數:"+ self.arg["Source"]
+		SourceText = pygame.font.Font(Config.Font,25)
+		SourceSurf, SourceRect = text_objects(SourceString[0:self.SourceStringCount], SourceText,Config.YELLOW)
+		SourceRect.topleft = (0,350)
+		
+		TimeString = "經過時間:"+ self.arg["Time"]
+		TimeText = pygame.font.Font(Config.Font,25)
+		TimeSurf, TimeRect = text_objects(TimeString[0:self.TimeStringCount], TimeText,Config.YELLOW)
+		TimeRect.topleft = (0,390)
+		
+		DistanceString = "移動距離:"+ self.arg["Distance"] + "M"
+		DistanceText = pygame.font.Font(Config.Font,25)
+		DistanceSurf, DistanceRect = text_objects(DistanceString[0:self.DistanceStringCount], DistanceText,Config.YELLOW)
+		DistanceRect.topleft = (0,430)
+		
+		InfoString = "恭喜完成任務!下一個關卡已解鎖!"
+		InfoText = pygame.font.Font(Config.Font,25)
+		InfoSurf, InfoRect = text_objects(InfoString[0:self.InfoStringCount], InfoText,Config.YELLOW)
+		InfoRect.topleft = (0,470)
+		
+		ReCounterText = pygame.font.Font(Config.Font,25)
+		ReCounterSurf, ReCounterRect = text_objects("請點擊任意鍵，或於"+str(self.ReCountToMenu)+"秒後跳轉回遊戲選單", ReCounterText,Config.YELLOW)
+		ReCounterRect.center = (int(self.Screen.get_size()[0]/2),int(self.Screen.get_size()[1]*0.9))
+		if self.FPS_Click == self.FPS_Delayer:
+			self.FPS_Click = 0
+			if len(LevelString) > self.LevelStringCount: 
+				self.LevelStringCount += 1
+			elif len(SourceString) > self.SourceStringCount: 
+				self.SourceStringCount += 1
+			elif len(TimeString) > self.TimeStringCount: 
+				self.TimeStringCount += 1
+			elif len(DistanceString) > self.DistanceStringCount: 
+				self.DistanceStringCount += 1
+			elif len(InfoString) > self.InfoStringCount: 
+				self.InfoStringCount += 1
+			elif not self.messageComplete:
+				self.messageComplete = True
+				self.ReCountStartTime = pygame.time.get_ticks()
+		else:
+			self.FPS_Click += 1
+		#貼圖
+		self.Screen.blit(LevelSurf, LevelRect)
+		self.Screen.blit(SourceSurf, SourceRect)
+		self.Screen.blit(TimeSurf, TimeRect)
+		self.Screen.blit(DistanceSurf, DistanceRect)
+		self.Screen.blit(InfoSurf, InfoRect)
+		if self.messageComplete:
+			self.Screen.blit(ReCounterSurf, ReCounterRect)
+			if (pygame.time.get_ticks() - self.ReCountStartTime >= 1000):
+				self.ReCountStartTime = pygame.time.get_ticks()
+				self.ReCountToMenu -= 1
+				if self.ReCountToMenu < 0:
+					self.gameMenu()
 		pygame.display.update()
 	def gameMenu(self):
 		self.display = False
 		self.nextScene = gameMenu(self.Screen)
 class gameEnd(Scene_Base):
-	def __init__(self,Screen):
+	def __init__(self,Screen,arg):
 		Scene_Base.__init__(self,Screen)
 		self.Textoffect_Y = 0
+		#覆寫檔案
+		with open('data/gameList/'+str(arg["Level"])+".json", 'w') as f:
+			json.dump(arg, f, ensure_ascii=False)
 	def update(self):
 		#畫面初始化
 		self.Screen.fill(Config.BLACK)
-		
 		for event in pygame.event.get():#偵測是否關閉
 			if event.type == 12:
 				quitgame()
-		
 		ThankText = pygame.font.Font(Config.Font,30)
 		ThankSurf, ThankRect = text_objects("感謝您的遊玩", ThankText,Config.WHITE)
 		ThankRect.topleft = ((self.Screen.get_rect()[2] - ThankRect[2]) / 2,500 - self.Textoffect_Y)
@@ -419,10 +542,13 @@ class gameEnd(Scene_Base):
 		self.Screen.blit(PlanSurf, PlanRect)
 		self.Screen.blit(GameSurf, GameRect)
 		self.Screen.blit(ArtSurf, ArtRect)
-		if self.Textoffect_Y >= 1500:
-			self.quitgame()
+		if self.Textoffect_Y >= 800:
+			self.Title()
 		self.Textoffect_Y += 1
 		pygame.display.update()
+	def Title(self):
+		self.display = False
+		self.nextScene = Title(self.Screen)
 def getHightRank():
 	file = open(PATH+"/rank.txt", 'r', encoding='UTF-8')
 	HightRank = int(file.readline())

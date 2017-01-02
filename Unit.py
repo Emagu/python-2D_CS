@@ -119,7 +119,7 @@ class Shield(MySprite):
 class Platform(MySprite):
 	def __init__(self, x, y,BlockImage):
 		MySprite.__init__(self)
-		self.image = pygame.image.load(Config.BlockImage)
+		self.image = pygame.image.load(BlockImage)
 		self.rect = self.image.get_rect()
 		self.rect.topleft = (x,y)
 	def update(self,bullets):
@@ -400,7 +400,7 @@ class Unit(object):
 				attacker = None
 				attacker = pygame.sprite.spritecollideany(self.Shield, target)
 				if attacker != None:
-					print(attacker.rect,self.Shield.rect)
+					#print(attacker.rect,self.Shield.rect)
 					#self.hp -= attacker.damage
 					pygame.mixer.Sound(Config.PATH+'/musices/defense.wav').play()
 					target.remove(attacker)
@@ -409,7 +409,7 @@ class Unit(object):
 			attacker = pygame.sprite.spritecollideany(self.Foot, target)
 			if attacker != None:
 				if attacker.Side != self.Side and attacker.Type == "Bullet":
-					print(attacker.rect,self.Foot.rect,self.Shield.rect)
+					#print(attacker.rect,self.Foot.rect,self.Shield.rect)
 					self.hp -= attacker.damage
 					pygame.mixer.Sound(Config.PATH+'/musices/Hit.wav').play()
 					target.remove(attacker)
@@ -418,7 +418,7 @@ class Unit(object):
 			attacker = pygame.sprite.spritecollideany(self.Body, target)
 			if attacker != None:
 				if attacker.Side != self.Side and attacker.Type == "Bullet":
-					print(attacker.rect,self.Body.rect,self.Shield.rect)
+					#print(attacker.rect,self.Body.rect,self.Shield.rect)
 					self.hp -= attacker.damage
 					pygame.mixer.Sound(Config.PATH+'/musices/Hit.wav').play()
 					target.remove(attacker)
