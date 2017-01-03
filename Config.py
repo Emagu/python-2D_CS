@@ -19,7 +19,7 @@ NormalCursorImage = PATH+'/images/cursor_point.png'
 AimCursorImage = PATH+'/images/cursor_aim.png'
 Font = PATH+'/fonts/DFT_B3.ttc'
 GameBGM = PATH+'/musices/bgm.mp3'
-VERSION = "Ver 3.8"
+VERSION = "Ver 4.0"
 
 class Pistol(object):
         ID = 0

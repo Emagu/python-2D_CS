@@ -76,7 +76,6 @@ class gameFrame(Button):
 		self.IconWidth = self.ic.get_rect()[2]
 		self.IconHeight = self.ic.get_rect()[3]
 		self.IconType = "Image"
-		self.click = True
 	def setAction(self,action):
 		self.Action = action
 	def update(self):
@@ -85,14 +84,9 @@ class gameFrame(Button):
 		if self.x + self.w > mouse[0] > self.x and self.y + self.h > mouse[1] > self.y:
 			self.frame.blit(self.ac, (10,10))
 			self.ds.blit(self.frame,(self.x,self.y))
-			if click[0] == 1 :
-				if self.click:
-					if self.Action != None and self.data["Lock"]=="False":
-						self.Action(self.data)
-				else:
-					self.click = True
-			else:
-				self.click = False
+			if click[0]==1:
+				if self.Action != None and self.data["Lock"]=="False":
+					self.Action(self.data)
 		else:
 			self.frame.blit(self.ac, (10,10))
 			self.ds.blit(self.frame,(self.x,self.y))

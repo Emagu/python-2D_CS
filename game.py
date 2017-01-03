@@ -21,10 +21,13 @@ class Title(Scene_Base):
 		Scene_Base.__init__(self,Screen)
 		pygame.mixer.music.load(Config.PATH+'/musices/Title.mp3')
 		pygame.mixer.music.play(-1,0.0)
-		self.StartButton = Button(320,450,Screen)
+		self.StartButton = Button(320,400,Screen)
 		self.StartButton.setIconWithImage(Config.PATH+'/images/Start_ic.png',Config.PATH+'/images/Start_ac.png')
 		self.StartButton.setAction(self.gameMenu)
-		self.EndButton = Button(320,520,Screen)
+		self.RankButton = Button(320,455,Screen)
+		self.RankButton.setIconWithImage(Config.PATH+'/images/Rank_ic.png',Config.PATH+'/images/Rank_ac.png')
+		self.RankButton.setAction(self.rankScene)
+		self.EndButton = Button(320,510,Screen)
 		self.EndButton.setIconWithImage(Config.PATH+'/images/End_ic.png',Config.PATH+'/images/End_ac.png')
 		self.EndButton.setAction(self.quitgame)
 		self.TitleImage = pygame.image.load(Config.TitleImage)
@@ -38,11 +41,12 @@ class Title(Scene_Base):
 		self.Screen.blit(self.TitleImage, (0, 0))
 	#按鈕
 		self.StartButton.update()
+		self.RankButton.update()
 		self.EndButton.update()
 		#版本號
 		VersionText = pygame.font.Font(Config.PATH+'/fonts/DFT_B3.ttc',20)
 		textSurf, textRect = text_objects(Config.VERSION, VersionText,Config.WHITE)
-		self.Screen.blit(textSurf, (self.TitleImage.get_rect()[2]-textRect[2], self.TitleImage.get_rect()[3] - textRect[3]))
+		self.Screen.blit(textSurf, (self.TitleImage.get_rect()[2]-textRect[2]-10, self.TitleImage.get_rect()[3] - textRect[3]))
 	#鼠標
 		mouse = pygame.mouse.get_pos()
 		AimCursor = pygame.image.load(Config.NormalCursorImage)
@@ -53,6 +57,9 @@ class Title(Scene_Base):
 	def gameMenu(self):
 		self.display = False
 		self.nextScene = gameMenu(self.Screen)
+	def rankScene(self):
+		self.display = False
+		self.nextScene = rankScene(self.Screen)
 class gameMenu(Scene_Base):
 	def __init__(self,Screen):
 		Scene_Base.__init__(self,Screen)
@@ -61,6 +68,11 @@ class gameMenu(Scene_Base):
 			newGame = gameFrame(50,50+160*len(self.GameList),self.Screen,game)
 			newGame.setAction(self.gameStart)
 			self.GameList.append(newGame)
+		self.rankData = self.readGameList()
+		self.returnButton = Button(590,530,Screen)
+		self.returnButton.setIconWithImage(Config.PATH+'/images/Return_ic.png',Config.PATH+'/images/Return_ac.png')
+		self.returnButton.setAction(self.Title)
+		pygame.time.delay(200)
 	def update(self):
 		for event in pygame.event.get():#偵測是否關閉
 			if event.type == 12:
@@ -70,6 +82,7 @@ class gameMenu(Scene_Base):
 	#按鈕
 		for game in self.GameList:
 			game.update()
+		self.returnButton.update()
 	#鼠標
 		mouse = pygame.mouse.get_pos()
 		AimCursor = pygame.image.load(Config.NormalCursorImage)
@@ -87,6 +100,9 @@ class gameMenu(Scene_Base):
 	def gameStart(self,arg):
 		self.display = False
 		self.nextScene = gameStart(self.Screen,arg)
+	def Title(self):
+		self.display = False
+		self.nextScene = Title(self.Screen)
 class gameStart(Scene_Base):
 	def __init__(self,Screen,arg):
 		Scene_Base.__init__(self,Screen)
@@ -273,7 +289,7 @@ class gameStart(Scene_Base):
 		if self.SOURCE > self.arg["HightSource"]:
 			self.arg["HightSource"] = self.SOURCE
 		past = pygame.time.get_ticks() // 1000 - self.TIME
-		self.arg["Time"] = str(past // 60) + ":" + str(past % 60) 
+		self.arg["Time"] = str(past // 60) + "分" + str(past % 60)+"秒" 
 		if past > self.arg["HightTimeValue"]:
 			self.arg["HightTimeValue"] = past
 			self.arg["HightTime"] = self.arg["Time"]
@@ -287,7 +303,7 @@ class gameStart(Scene_Base):
 		if self.SOURCE > self.arg["HightSource"]:
 			self.arg["HightSource"] = self.SOURCE
 		past = pygame.time.get_ticks() // 1000 - self.TIME
-		self.arg["Time"] = str(past // 60) + ":" + str(past % 60) 
+		self.arg["Time"] = str(past // 60) + "分" + str(past % 60)+"秒"
 		if past > self.arg["HightTimeValue"]:
 			self.arg["HightTimeValue"] = past
 			self.arg["HightTime"] = self.arg["Time"]
@@ -549,11 +565,83 @@ class gameEnd(Scene_Base):
 	def Title(self):
 		self.display = False
 		self.nextScene = Title(self.Screen)
-def getHightRank():
-	file = open(PATH+"/rank.txt", 'r', encoding='UTF-8')
-	HightRank = int(file.readline())
-	file.close()
-	return HightRank
+class rankScene(Scene_Base):
+	def __init__(self,Screen):
+		Scene_Base.__init__(self,Screen)
+		self.rankData = self.readGameList()
+		self.returnButton = Button(100,500,Screen)
+		self.returnButton.setIconWithImage(Config.PATH+'/images/Return_ic.png',Config.PATH+'/images/Return_ac.png')
+		self.returnButton.setAction(self.Title)
+	def update(self):
+		for event in pygame.event.get():#偵測是否關閉
+			if event.type == 12:
+				self.quitgame()
+		#畫面初始化
+		self.Screen.fill(Config.BLACK)
+		G1_Text = pygame.font.Font(Config.PATH+'/fonts/DFT_B3.ttc',30)
+		G1_Surf, G1_Rect = text_objects("第一關:"+self.rankData[0]["Title"], G1_Text,Config.WHITE)
+		self.Screen.blit(G1_Surf, (100,30))
+		
+		G1_Kill_Text = pygame.font.Font(Config.PATH+'/fonts/DFT_B3.ttc',20)
+		G1_Kill_Surf, G1_Kill_Rect = text_objects("最高擊殺數:"+str(self.rankData[0]["HightSource"])+"人", G1_Kill_Text,Config.WHITE)
+		self.Screen.blit(G1_Kill_Surf, (100,70))
+		
+		G1_dist_Text = pygame.font.Font(Config.PATH+'/fonts/DFT_B3.ttc',20)
+		G1_dist_Surf, G1_dist_Rect = text_objects("最遠移動距離:"+str(self.rankData[0]["HightDistance"])+"M", G1_dist_Text,Config.WHITE)
+		self.Screen.blit(G1_dist_Surf, (100,100))
+		
+		G1_time_Text = pygame.font.Font(Config.PATH+'/fonts/DFT_B3.ttc',20)
+		G1_time_Surf, G1_time_Rect = text_objects("最久存活時間:"+self.rankData[0]["HightTime"], G1_time_Text,Config.WHITE)
+		self.Screen.blit(G1_time_Surf, (100,130))
+		
+		G2_Text = pygame.font.Font(Config.PATH+'/fonts/DFT_B3.ttc',30)
+		G2_Surf, G2_Rect = text_objects("第二關:"+self.rankData[1]["Title"], G2_Text,Config.WHITE)
+		self.Screen.blit(G2_Surf, (100,180))
+		
+		G2_Kill_Text = pygame.font.Font(Config.PATH+'/fonts/DFT_B3.ttc',20)
+		G2_Kill_Surf, G2_Kill_Rect = text_objects("最高擊殺數:"+str(self.rankData[1]["HightSource"])+"人", G2_Kill_Text,Config.WHITE)
+		self.Screen.blit(G2_Kill_Surf, (100,220))
+		
+		G2_dist_Text = pygame.font.Font(Config.PATH+'/fonts/DFT_B3.ttc',20)
+		G2_dist_Surf, G2_dist_Rect = text_objects("最遠移動距離:"+str(self.rankData[1]["HightDistance"])+"M", G2_dist_Text,Config.WHITE)
+		self.Screen.blit(G2_dist_Surf, (100,250))
+		
+		G2_time_Text = pygame.font.Font(Config.PATH+'/fonts/DFT_B3.ttc',20)
+		G2_time_Surf, G2_time_Rect = text_objects("最久存活時間:"+self.rankData[1]["HightTime"], G2_time_Text,Config.WHITE)
+		self.Screen.blit(G2_time_Surf, (100,280))
+		
+		G3_Text = pygame.font.Font(Config.PATH+'/fonts/DFT_B3.ttc',30)
+		G3_Surf, G3_Rect = text_objects("第三關:"+self.rankData[2]["Title"], G3_Text,Config.WHITE)
+		self.Screen.blit(G3_Surf, (100,330))
+		
+		G3_Kill_Text = pygame.font.Font(Config.PATH+'/fonts/DFT_B3.ttc',20)
+		G3_Kill_Surf, G3_Kill_Rect = text_objects("最高擊殺數:"+str(self.rankData[2]["HightSource"])+"人", G3_Kill_Text,Config.WHITE)
+		self.Screen.blit(G3_Kill_Surf, (100,360))
+		
+		G3_dist_Text = pygame.font.Font(Config.PATH+'/fonts/DFT_B3.ttc',20)
+		G3_dist_Surf, G3_dist_Rect = text_objects("最遠移動距離:"+str(self.rankData[2]["HightDistance"])+"M", G3_dist_Text,Config.WHITE)
+		self.Screen.blit(G3_dist_Surf, (100,390))
+		
+		G3_time_Text = pygame.font.Font(Config.PATH+'/fonts/DFT_B3.ttc',20)
+		G3_time_Surf, G3_time_Rect = text_objects("最久存活時間:"+self.rankData[2]["HightTime"], G3_time_Text,Config.WHITE)
+		self.Screen.blit(G3_time_Surf, (100,420))
+		self.returnButton.update()
+		mouse = pygame.mouse.get_pos()
+		AimCursor = pygame.image.load(Config.NormalCursorImage)
+		AimCursor_rect = AimCursor.get_rect()
+		AimCursor_rect.center = mouse
+		self.Screen.blit(AimCursor, AimCursor_rect)
+		pygame.display.update()
+	def readGameList(self):
+		path = "data/gameList"
+		data = []
+		for f in os.listdir(path):
+			with open(path+"/"+f) as json_data:
+				data.append(json.load(json_data))
+		return data
+	def Title(self):
+		self.display = False
+		self.nextScene = Title(self.Screen)
 def main():
 	global fpsClock,DISPLAYSURF
 	pygame.init()
